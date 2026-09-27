@@ -1,0 +1,92 @@
+name: CI/CD
+
+on:
+  pull_request:
+
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+
+permissions:
+  contents: read
+  packages: write
+
+
+jobs:
+
+  verify:
+
+    name: Build frontend
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+
+  publish:
+
+    name: Docker → GHCR
+
+    runs-on: ubuntu-latest
+
+    needs: verify
+
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+
+      - name: Set image
+        run: |
+          OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          REPO=$(echo "${GITHUB_REPOSITORY#*/}" | tr '[:upper:]' '[:lower:]')
+
+          echo "IMAGE=ghcr.io/${OWNER}/${REPO}" >> "$GITHUB_ENV"
+
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg GIT_SHA=${{ github.sha }} \
+            -t "$IMAGE:${{ github.sha }}" \
+            -t "$IMAGE:main" \
+            .
+
+
+      - name: Push SHA image
+        run: |
+          docker push "$IMAGE:${{ github.sha }}"
+
+
+      - name: Push main image
+        run: |
+          docker push "$IMAGE:main"

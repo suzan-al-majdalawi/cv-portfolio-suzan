@@ -1,0 +1,138 @@
+name: Rollback staging
+
+
+on:
+
+  workflow_dispatch:
+
+    inputs:
+
+      sha:
+
+        description: "Full commit SHA to rollback to"
+
+        required: true
+
+
+permissions:
+
+  contents: read
+
+
+jobs:
+
+  rollback:
+
+    name: Rollback staging
+
+    runs-on: ubuntu-latest
+
+
+    environment:
+
+      name: staging
+
+      url: ${{ vars.STAGING_URL }}
+
+
+    concurrency:
+
+      group: deploy-staging
+
+      cancel-in-progress: false
+
+
+    steps:
+
+
+      # =========================================
+      # Frontend
+      # =========================================
+
+      - name: Rollback frontend
+
+        env:
+
+          HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+
+          SHA: ${{ inputs.sha }}
+
+        run: |
+
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${GITHUB_REPOSITORY#*/}-frontend:${SHA}"
+
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+
+          ENCODED=$(jq -rn --arg u "$IMAGE" '$u|@uri')
+
+          curl -fsS \
+            -X POST \
+            "${HOOK}&imgURL=${ENCODED}"
+
+          echo "Frontend rollback started."
+
+
+      # =========================================
+      # Backend
+      # =========================================
+
+      - name: Rollback backend
+
+        env:
+
+          HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+
+          SHA: ${{ inputs.sha }}
+
+        run: |
+
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${GITHUB_REPOSITORY#*/}-backend:${SHA}"
+
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+
+          ENCODED=$(jq -rn --arg u "$IMAGE" '$u|@uri')
+
+          curl -fsS \
+            -X POST \
+            "${HOOK}&imgURL=${ENCODED}"
+
+          echo "Backend rollback started."
+
+
+      # =========================================
+      # Verify frontend version
+      # =========================================
+
+      - name: Verify frontend
+
+        env:
+
+          URL: ${{ vars.STAGING_URL }}
+
+          SHA: ${{ inputs.sha }}
+
+        run: |
+
+          URL="${URL%/}"
+
+          for i in $(seq 1 30); do
+
+            LIVE=$(curl -fsS "$URL/version.txt" 2>/dev/null || true)
+
+            if [ "$LIVE" = "$SHA" ]; then
+
+              echo "Frontend kör $SHA"
+
+              exit 0
+
+            fi
+
+            echo "Försök $i/30..."
+
+            sleep 10
+
+          done
+
+          echo "Rollback kunde inte verifieras."
+
+          exit 1
