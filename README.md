@@ -56,4 +56,3 @@ Edit `src/data.js`. Do not duplicate the entire CV for every profession. Keep co
 7. Add authentication if other people should create their own CVs.
 8. Add Figma-like theme settings.
 9. Add ATS-friendly CV template.
-# cv-portfolio
