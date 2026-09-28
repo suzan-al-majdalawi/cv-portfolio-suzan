@@ -83,7 +83,7 @@ jobs:
       - name: Deploy to Render Staging
         env:
           DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
-        run: curl "$DEPLOY_HOOK"
+        run: curl "$RENDER_DEPLOY_HOOK"
 
   production:
     name: Deploy Production
@@ -96,4 +96,4 @@ jobs:
       - name: Deploy to Render Production
         env:
           DEPLOY_HOOK: ${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}
-        run: curl "$DEPLOY_HOOK"
+        run: curl "$RENDER_DEPLOY_HOOK"

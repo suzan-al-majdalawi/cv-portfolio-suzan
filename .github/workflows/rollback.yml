@@ -53,7 +53,7 @@ jobs:
 
         env:
 
-          HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
 
           SHA: ${{ inputs.sha }}
 
@@ -80,7 +80,7 @@ jobs:
 
         env:
 
-          HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
 
           SHA: ${{ inputs.sha }}
 
