@@ -242,7 +242,7 @@ export const profileData = {
 
   experience: [
     {
-      date: "Sep 2025 – present",
+      date: "Sep 2026 – present",
       title: "IT-pedagog",
       company: "JC, Sala kommun",
       bullets: [
@@ -256,8 +256,34 @@ export const profileData = {
     },
 
     {
-      date: "Apr 2025 – Sep 2025",
-      title: "LIA / Praktik – IT-pedagog",
+      date: "Summer juni 2026- agusti 2026",
+      title: "Sommarvikarie – Särskilt boende för äldre",
+      company: "Sala kommun",
+      bullets: [
+        "Arbetade med personcentrerad omvårdnad och service.",
+        "Gav stöd i den dagliga omvårdnaden utifrån individens behov.",
+        "Hjälpte till med hygien, av- och påklädning samt matsituationer.",
+        "Bidrog till aktiviteter och utevistelse.",
+        "Samarbetade med kollegor och tog ansvar för tilldelade arbetsuppgifter.",
+        "Utförde delegerade medicinska omvårdnadsuppgifter enligt verksamhetens rutiner."
+      ]
+    },
+
+    {
+      date: "juni 2026",
+      title: "Praktik – SFI",
+      company: "Sala kommun",
+      bullets: [
+        "Praktik med fokus på språkstöd, digitala verktyg och undervisning.",
+        "Hjälpte deltagare med digitala verktyg och datoranvändning.",
+        "Gav stöd i undervisning och praktiska uppgifter.",
+        "Anpassade kommunikationen efter deltagarnas språkliga och digitala förutsättningar."
+      ]
+    },
+
+    {
+      date: "Apr 2026 – Sep 2026",
+      title: "IT-pedagog_Praktik – Jobb Center",
       company: "JC, Sala kommun",
       bullets: [
         "Praktik med fokus på pedagogik, digital kompetens och IT-stöd.",
@@ -279,32 +305,6 @@ export const profileData = {
         "Använde Git/GitHub för versionshantering och samarbete.",
         "Deltog i planering och utveckling av nya funktioner.",
         "Arbetade i ett agilt utvecklingsteam enligt Scrum."
-      ]
-    },
-
-    {
-      date: "2025",
-      title: "Praktik – SFI",
-      company: "Sala kommun",
-      bullets: [
-        "Praktik med fokus på språkstöd, digitala verktyg och undervisning.",
-        "Hjälpte deltagare med digitala verktyg och datoranvändning.",
-        "Gav stöd i undervisning och praktiska uppgifter.",
-        "Anpassade kommunikationen efter deltagarnas språkliga och digitala förutsättningar."
-      ]
-    },
-
-    {
-      date: "Summer 2025",
-      title: "Sommarvikarie – Särskilt boende för äldre",
-      company: "Sala kommun",
-      bullets: [
-        "Arbetade med personcentrerad omvårdnad och service.",
-        "Gav stöd i den dagliga omvårdnaden utifrån individens behov.",
-        "Hjälpte till med hygien, av- och påklädning samt matsituationer.",
-        "Bidrog till aktiviteter och utevistelse.",
-        "Samarbetade med kollegor och tog ansvar för tilldelade arbetsuppgifter.",
-        "Utförde delegerade medicinska omvårdnadsuppgifter enligt verksamhetens rutiner."
       ]
     },
 
@@ -336,7 +336,7 @@ export const profileData = {
 
   education: [
     {
-      date: "Sep 2025 – present",
+      date: "Sep 2026 – present",
       title: "Frontend Developer with UX Competence",
       school: "Chas Academy, Stockholm",
       details:
@@ -346,7 +346,7 @@ export const profileData = {
     {
       date: "Nov 2024 – Apr 2025",
       title: "Frontendutvecklare",
-      school: "Lexicon IT Proffs, Stockholm",
+      school: "Lexicon IT Proffs, Stockholm-Distans",
       details:
         "HTML, CSS, JavaScript, React, semantic HTML, responsive design, DOM, APIs, state management, routing, SASS, Git, Agile och Scrum."
     },
@@ -370,7 +370,7 @@ export const profileData = {
 
   courses: [
     {
-      date: "2025",
+      date: "nov 2025 – jan 2026",
       title: "Inclusive Design – 30 YH-poäng",
       school: "EC Utbildning — Distans",
       details:
