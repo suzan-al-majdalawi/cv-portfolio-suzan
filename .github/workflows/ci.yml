@@ -2,91 +2,189 @@ name: CI/CD
 
 on:
   pull_request:
-
   push:
     branches:
       - main
-
+      - m0
   workflow_dispatch:
-
 
 permissions:
   contents: read
-  packages: write
-
 
 jobs:
-
   verify:
-
-    name: Build frontend
-
+    name: Test & bygg
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
+      - name: Install
         run: npm ci
+
+      - name: Test
+        run: npm run test:run
 
       - name: Build
         run: npm run build
 
 
   publish:
-
-    name: Docker → GHCR
-
+    name: Image → GHCR
     runs-on: ubuntu-latest
-
     needs: verify
 
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
+
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
-
-      - name: Set image
+      - name: Imagenamn
         run: |
-          OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
-          REPO=$(echo "${GITHUB_REPOSITORY#*/}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
-          echo "IMAGE=ghcr.io/${OWNER}/${REPO}" >> "$GITHUB_ENV"
-
-
-      - name: Login to GHCR
-        uses: docker/login-action@v4
+      - name: Logga in på GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Build image
+      - name: Bygg imagen
         run: |
           docker build \
             --build-arg GIT_SHA=${{ github.sha }} \
             -t "$IMAGE:${{ github.sha }}" \
-            -t "$IMAGE:main" \
+            -t "$IMAGE:${{ github.ref_name }}" \
             .
 
-
-      - name: Push SHA image
+      - name: Pusha image
         run: |
           docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:${{ github.ref_name }}"
 
 
-      - name: Push main image
+  deploy-staging:
+    name: Deploy → staging
+    runs-on: ubuntu-latest
+    needs: publish
+
+    if: github.ref == 'refs/heads/m0' && github.event_name == 'push'
+
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+
+    steps:
+      - name: Deploy till Render
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
-          docker push "$IMAGE:main"
+          if [ -z "$HOOK" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK saknas i staging"
+            exit 1
+          fi
+
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"
+          ENCODED=$(jq -rn --arg u "$IMAGE" '$u|@uri')
+
+          curl -fsS \
+            -X POST \
+            "${HOOK}&imgURL=${ENCODED}"
+
+          echo "Render deployar:"
+          echo "$IMAGE"
+
+      - name: Vänta på staging
+        env:
+          URL: ${{ vars.STAGING_URL }}
+        run: |
+          URL="${URL%/}"
+
+          for i in $(seq 1 30); do
+            LIVE=$(curl -fsS "$URL/version.txt" 2>/dev/null || true)
+
+            if [ "$LIVE" = "$GITHUB_SHA" ]; then
+              echo "Staging kör $GITHUB_SHA"
+              exit 0
+            fi
+
+            echo "Försök $i/30..."
+            sleep 10
+          done
+
+          echo "::error::Staging kör inte $GITHUB_SHA"
+          exit 1
+
+
+  deploy-production:
+    name: Deploy → production
+    runs-on: ubuntu-latest
+    needs: publish
+
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment:
+      name: production
+      url: ${{ vars.PROD_URL }}
+
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Deploy till Render
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK saknas i production"
+            exit 1
+          fi
+
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"
+          ENCODED=$(jq -rn --arg u "$IMAGE" '$u|@uri')
+
+          curl -fsS \
+            -X POST \
+            "${HOOK}&imgURL=${ENCODED}"
+
+          echo "Render deployar:"
+          echo "$IMAGE"
+
+      - name: Vänta på production
+        env:
+          URL: ${{ vars.PROD_URL }}
+        run: |
+          URL="${URL%/}"
+
+          for i in $(seq 1 30); do
+            LIVE=$(curl -fsS "$URL/version.txt" 2>/dev/null || true)
+
+            if [ "$LIVE" = "$GITHUB_SHA" ]; then
+              echo "Production kör $GITHUB_SHA"
+              exit 0
+            fi
+
+            echo "Försök $i/30..."
+            sleep 10
+          done
+
+          echo "::error::Production kör inte $GITHUB_SHA"
+          exit 1
